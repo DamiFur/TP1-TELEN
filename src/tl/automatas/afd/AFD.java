@@ -502,6 +502,90 @@ public class AFD {
 		
 		String[] estadosTotales = aut.getEstadosTotales();
 		List<String[]> transiciones = aut.getTransiciones();
+		String[] estadosFinales = aut.getEstadosFinales();
+		String[] lenguaje = aut.getLenguaje();
+		
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		List<Set<String>> sets = new ArrayList<Set<String>>();
+		
+		for(String finales : estadosFinales){
+			map.put(finales, 0);
+			sets.get(0).add(finales);
+		}
+		
+		for(String totales : estadosTotales){
+			if(!map.get(totales).equals(0)){
+				map.put(totales, 1);
+				sets.get(1).add(totales);
+			}
+		}
+		
+		
+		int cantSets = 2;
+		int newSets = 0;
+		Boolean huboCambios = false;
+		
+		Map<String, String> trans = new HashMap<String, String>();
+		
+		for(String[] transicion : transiciones){;
+			trans.put(transicion[0] + "leng:" + transicion[1], transicion[2]);
+		}
+		
+		Map<Integer, Integer> aux = new HashMap<Integer, Integer>();
+		
+		List<Set<String>> setsAux = new ArrayList<Set<String>>(sets);
+		
+		List<Set<String>> toAdd = new ArrayList<Set<String>>();
+		
+		Integer incremental = 0;
+		
+		Integer cambio = 0;
+		
+		for(String leng : lenguaje){
+			for(Set<String> set : setsAux){
+				for(String obj : set){
+					if(trans.containsKey(obj + "leng:" + leng)){
+						if(aux.containsKey(map.get(obj))){
+							toAdd.get(aux.get(map.get(obj))).add(obj);
+							map.put(obj, map.get(obj) + aux.get(map.get(obj)));
+						} else {
+							aux.put(map.get(obj), incremental++);
+							cambio++;
+							toAdd.add(aux.get(map.get(obj)), new HashSet<String>());
+							toAdd.get(aux.get(map.get(obj))).add(obj);
+							map.put(obj, map.get(obj) + aux.get(map.get(obj)));
+						}
+					}
+				}
+				if(cambio > 1){
+					huboCambios = true;
+				}
+				cambio = 0;
+				sets.remove(sets.indexOf(set));
+				sets.addAll(toAdd);
+//				incremental = 0;
+			}
+		}
+
+		
+		
+		
+//		do{
+//			for(List<String> listas : trans.values()){
+//				for(String transicion : listas){
+////					aux.add(transicion[2])
+//					if(!(map.get(transicion[0]).equals(map.get(transicion[2])))){
+//						map.put(transicion[0], cantSets + map.get(transicion[2]));
+//						newSets++;
+//						huboCambios = true;
+//					}
+//				}
+//				cantSets = cantSets + newSets;
+//				newSets = 0;
+//			}			
+//		} while(huboCambios);
+
+
 		
 		//Usar un HashMap para mapear cada uno de los estados con su miembro representativo en el DisjointSet
 		//Empezar cargandole al mapa todos los estados finales y todos los iniciales tomando como referencia uno de cada conjunto
