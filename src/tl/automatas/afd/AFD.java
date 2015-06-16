@@ -540,7 +540,7 @@ public class AFD {
 		
 		List<Set<String>> setsAux = new ArrayList<Set<String>>(sets);
 		
-		List<Set<String>> toAdd = new ArrayList<Set<String>>();
+		List<Set<String>> toAddAux = new ArrayList<Set<String>>();
 		
 		Integer incremental = 0;
 		
@@ -548,26 +548,20 @@ public class AFD {
 		
 		for(Set<String> set : setsAux){
 			Set<String> setAux = new HashSet<String>(set);
-			Map<String, Integer> agregados = new HashMap<String, Integer>();
 			for(String leng : lenguaje){
 				for(String obj : setAux){
 					if(trans.containsKey(obj + "leng:" + leng)){
 						if(aux.containsKey(map.get(obj))){
-//							if(agregados.containsKey(obj)){
-//								FIJARSE COMO COMPLETAR ESTO PARA VER CUANDO UN ESTADO VA HACIA MAS DE UN CONJUNTO
-//							}
-							toAdd.get(aux.get(map.get(obj))).add(obj);
+							toAddAux.get(aux.get(map.get(obj))).add(obj);
 							if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
 								sets.get(sets.indexOf(set)).remove(obj);
 							}
-//							agregados.put(obj, aux.get(map.get(trans.get(obj + "leng:" + leng))) + 1);
 						} else {
 							aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
 							cambio++;
-							toAdd.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
-							toAdd.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
+							toAddAux.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
+							toAddAux.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
 							sets.get(sets.indexOf(set)).remove(obj);
-//							agregados.put(obj, aux.get(map.get(trans.get(obj + "leng:" + leng))) + 1);
 						}
 					}
 				}
@@ -583,7 +577,41 @@ public class AFD {
 				}
 //				incremental = 0;
 			}
+			Map<String, Integer> compartidos = new HashMap<String, Integer>();
+			for(String estado : estadosFinales){
+				compartidos.put(estado, 0);
+			}
+			int contador = 0;
+			int cantAgregadas = 0;
+
+			for(String estado : estadosTotales){
+				for(Set<String> setToCheck : toAddAux){
+					if(setToCheck.contains(estado)){
+						compartidos.put(estado, compartidos.get(estado) + contador + cantAgregadas*(toAddAux.size()));
+						cantAgregadas++;
+					}
+					contador++;
+				}
+				contador = 0;
+				cantAgregadas = 0;
+			}
+			List<Set<String>> toAdd = new ArrayList<Set<String>>();
+			Map<Integer, Integer> correlatividades = new HashMap<Integer, Integer>();
+			int inc = 0;
+			for(String estado : compartidos.keySet()){
+				if(!correlatividades.containsKey(compartidos.get(estado))){
+					correlatividades.put(compartidos.get(estado), inc++);
+				}
+			}
+			for(int i = 0; i < inc; i++){
+				toAdd.add(i, new HashSet<String>());
+			}
+			for(String estado : compartidos.keySet()){
+				toAdd.get(correlatividades.get(compartidos.get(estado))).add(estado);
+			}
+			
 			sets.addAll(toAdd);
+			//CHEQUEAR QUE FUNCIONE LA ACTUALIZACION DEL MAPA DE PERTENENCIA!
 			for(String obj : setAux){
 				if(aux.containsKey(map.get(obj))){
 					map.put(obj, map.get(obj) + aux.get(map.get(obj)) + 1);
