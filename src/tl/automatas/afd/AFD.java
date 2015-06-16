@@ -548,20 +548,26 @@ public class AFD {
 		
 		for(Set<String> set : setsAux){
 			Set<String> setAux = new HashSet<String>(set);
+			Map<String, Integer> agregados = new HashMap<String, Integer>();
 			for(String leng : lenguaje){
 				for(String obj : setAux){
 					if(trans.containsKey(obj + "leng:" + leng)){
 						if(aux.containsKey(map.get(obj))){
+//							if(agregados.containsKey(obj)){
+//								FIJARSE COMO COMPLETAR ESTO PARA VER CUANDO UN ESTADO VA HACIA MAS DE UN CONJUNTO
+//							}
 							toAdd.get(aux.get(map.get(obj))).add(obj);
 							if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
 								sets.get(sets.indexOf(set)).remove(obj);
 							}
+//							agregados.put(obj, aux.get(map.get(trans.get(obj + "leng:" + leng))) + 1);
 						} else {
 							aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
 							cambio++;
 							toAdd.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
 							toAdd.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
 							sets.get(sets.indexOf(set)).remove(obj);
+//							agregados.put(obj, aux.get(map.get(trans.get(obj + "leng:" + leng))) + 1);
 						}
 					}
 				}
