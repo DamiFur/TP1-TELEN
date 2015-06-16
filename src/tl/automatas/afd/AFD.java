@@ -172,6 +172,8 @@ public class AFD {
 		
 		Automata AFD = derivar(automataUniversal);
 		AFD.printAutomata();
+		
+		minimizar(AFD);
 
 		
 		//System.err.println("Método no implementado: GenerateDFAFromRegex");
@@ -507,6 +509,9 @@ public class AFD {
 		
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		List<Set<String>> sets = new ArrayList<Set<String>>();
+		sets.add(0, new HashSet<String>());
+		sets.add(1, new HashSet<String>());
+		
 		
 		for(String finales : estadosFinales){
 			map.put(finales, 0);
@@ -514,7 +519,7 @@ public class AFD {
 		}
 		
 		for(String totales : estadosTotales){
-			if(!map.get(totales).equals(0)){
+			if(!map.containsKey(totales)){
 				map.put(totales, 1);
 				sets.get(1).add(totales);
 			}
@@ -541,19 +546,20 @@ public class AFD {
 		
 		Integer cambio = 0;
 		
-		for(String leng : lenguaje){
-			for(Set<String> set : setsAux){
-				for(String obj : set){
+		for(Set<String> set : setsAux){
+			Set<String> setAux = new HashSet<String>(set);
+			for(String leng : lenguaje){
+				for(String obj : setAux){
 					if(trans.containsKey(obj + "leng:" + leng)){
 						if(aux.containsKey(map.get(obj))){
 							toAdd.get(aux.get(map.get(obj))).add(obj);
-							map.put(obj, map.get(obj) + aux.get(map.get(obj)));
+							sets.get(sets.indexOf(set)).remove(obj);
 						} else {
-							aux.put(map.get(obj), incremental++);
+							aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
 							cambio++;
-							toAdd.add(aux.get(map.get(obj)), new HashSet<String>());
-							toAdd.get(aux.get(map.get(obj))).add(obj);
-							map.put(obj, map.get(obj) + aux.get(map.get(obj)));
+							toAdd.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
+							toAdd.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
+							sets.get(sets.indexOf(set)).remove(obj);
 						}
 					}
 				}
@@ -561,10 +567,24 @@ public class AFD {
 					huboCambios = true;
 				}
 				cambio = 0;
-				sets.remove(sets.indexOf(set));
+				if(set.size() == 0){
+					sets.remove(sets.indexOf(set));
+				}
 				sets.addAll(toAdd);
 //				incremental = 0;
 			}
+			for(String obj : setAux){
+				if(aux.containsKey(map.get(obj))){
+					map.put(obj, map.get(obj) + aux.get(map.get(obj)) + 1);
+				}
+			}
+		}
+		for(Set<String> set : sets){
+			System.out.print("[ ");
+			for(String str : set){
+				System.out.print(str + " ");
+			}
+			System.out.println("]");
 		}
 
 		
