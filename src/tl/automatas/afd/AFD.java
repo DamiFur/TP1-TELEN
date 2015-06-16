@@ -553,7 +553,9 @@ public class AFD {
 					if(trans.containsKey(obj + "leng:" + leng)){
 						if(aux.containsKey(map.get(obj))){
 							toAdd.get(aux.get(map.get(obj))).add(obj);
-							sets.get(sets.indexOf(set)).remove(obj);
+							if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
+								sets.get(sets.indexOf(set)).remove(obj);
+							}
 						} else {
 							aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
 							cambio++;
@@ -568,11 +570,14 @@ public class AFD {
 				}
 				cambio = 0;
 				if(set.size() == 0){
-					sets.remove(sets.indexOf(set));
+					//PROBAR COMENTAR TODO ESTE IF
+					if(sets.contains(set)){
+						sets.remove(sets.indexOf(set));	
+					}
 				}
-				sets.addAll(toAdd);
 //				incremental = 0;
 			}
+			sets.addAll(toAdd);
 			for(String obj : setAux){
 				if(aux.containsKey(map.get(obj))){
 					map.put(obj, map.get(obj) + aux.get(map.get(obj)) + 1);
