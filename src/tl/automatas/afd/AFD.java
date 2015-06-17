@@ -578,17 +578,22 @@ public class AFD {
 //				incremental = 0;
 			}
 			Map<String, Integer> compartidos = new HashMap<String, Integer>();
-			for(String estado : estadosFinales){
-				compartidos.put(estado, 0);
-			}
+//			for(String estado : estadosTotales){
+//				compartidos.put(estado, 0);
+//			}
 			int contador = 0;
 			int cantAgregadas = 0;
 
 			for(String estado : estadosTotales){
 				for(Set<String> setToCheck : toAddAux){
 					if(setToCheck.contains(estado)){
-						compartidos.put(estado, compartidos.get(estado) + contador + cantAgregadas*(toAddAux.size()));
-						cantAgregadas++;
+						if(!compartidos.containsKey(estado)){
+							compartidos.put(estado, contador + cantAgregadas*(toAddAux.size()));
+							cantAgregadas++;
+						}else{
+							compartidos.put(estado, compartidos.get(estado) + contador + cantAgregadas*(toAddAux.size()));
+							cantAgregadas++;	
+						}
 					}
 					contador++;
 				}
