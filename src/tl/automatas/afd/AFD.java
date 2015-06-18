@@ -526,112 +526,127 @@ public class AFD {
 		}
 		
 		
-		int cantSets = 2;
-		int newSets = 0;
-		Boolean huboCambios = false;
-		
 		Map<String, String> trans = new HashMap<String, String>();
 		
 		for(String[] transicion : transiciones){;
 			trans.put(transicion[0] + "leng:" + transicion[1], transicion[2]);
 		}
-		
-		Map<Integer, Integer> aux = new HashMap<Integer, Integer>();
-		
-		List<Set<String>> setsAux = new ArrayList<Set<String>>(sets);
-		
-		List<Set<String>> toAddAux = new ArrayList<Set<String>>();
-		
-		Integer incremental = 0;
-		
-		Integer cambio = 0;
-		
-		for(Set<String> set : setsAux){
-			Set<String> setAux = new HashSet<String>(set);
-			for(String leng : lenguaje){
-				for(String obj : setAux){
-					if(trans.containsKey(obj + "leng:" + leng)){
-						if(aux.containsKey(map.get(obj))){
-							toAddAux.get(aux.get(map.get(obj))).add(obj);
-							if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
-								sets.get(sets.indexOf(set)).remove(obj);
-							}
-						} else {
-							aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
-							cambio++;
-							toAddAux.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
-							toAddAux.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
-							sets.get(sets.indexOf(set)).remove(obj);
-						}
-					}
-				}
-				if(cambio > 1){
-					huboCambios = true;
-				}
-				cambio = 0;
-				if(set.size() == 0){
-					//PROBAR COMENTAR TODO ESTE IF
-					if(sets.contains(set)){
-						sets.remove(sets.indexOf(set));	
-					}
-				}
-//				incremental = 0;
-			}
-			Map<String, Integer> compartidos = new HashMap<String, Integer>();
-//			for(String estado : estadosTotales){
-//				compartidos.put(estado, 0);
-//			}
-			int contador = 0;
-			int cantAgregadas = 0;
 
-			for(String estado : estadosTotales){
-				for(Set<String> setToCheck : toAddAux){
-					if(setToCheck.contains(estado)){
-						if(!compartidos.containsKey(estado)){
-							compartidos.put(estado, contador + cantAgregadas*(toAddAux.size()));
-							cantAgregadas++;
-						}else{
-							compartidos.put(estado, compartidos.get(estado) + contador + cantAgregadas*(toAddAux.size()));
-							cantAgregadas++;	
+				
+		Boolean primerCambio;
+		
+		Boolean huboCambios = true;
+		
+		while(huboCambios){
+			
+			List<Set<String>> setsAux = new ArrayList<Set<String>>(sets);
+			
+			List<Set<String>> toAddAux = new ArrayList<Set<String>>();
+			
+			List<List<Set<String>>> toAddAuxList = new LinkedList<List<Set<String>>>();
+			
+			Integer incremental = 0;
+			
+			Map<Integer, Integer> aux = new HashMap<Integer, Integer>();
+			
+			huboCambios = false;
+			
+			for(Set<String> set : setsAux){
+				Set<String> setAux = new HashSet<String>(set);
+				primerCambio = false;
+				for(String leng : lenguaje){
+					for(String obj : setAux){
+						if(trans.containsKey(obj + "leng:" + leng)){
+							if(aux.containsKey(map.get(trans.get(obj + "leng:" + leng)))){
+								toAddAux.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
+								if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
+									sets.get(sets.indexOf(set)).remove(obj);
+								}
+							} else {
+								aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
+								if(primerCambio){
+									huboCambios = true;
+								} else {
+									primerCambio = true;
+								}
+								toAddAux.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
+								toAddAux.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
+								if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
+									sets.get(sets.indexOf(set)).remove(obj);
+								}
+							}
 						}
 					}
-					contador++;
+
+					if(set.size() == 0){
+						//PROBAR COMENTAR TODO ESTE IF
+						if(sets.contains(set)){
+							sets.remove(sets.indexOf(set));	
+						}
+					}
 				}
-				contador = 0;
-				cantAgregadas = 0;
-			}
-			List<Set<String>> toAdd = new ArrayList<Set<String>>();
-			Map<Integer, Integer> correlatividades = new HashMap<Integer, Integer>();
-			int inc = 0;
-			for(String estado : compartidos.keySet()){
-				if(!correlatividades.containsKey(compartidos.get(estado))){
-					correlatividades.put(compartidos.get(estado), inc++);
-				}
-			}
-			for(int i = 0; i < inc; i++){
-				toAdd.add(i, new HashSet<String>());
-			}
-			for(String estado : compartidos.keySet()){
-				toAdd.get(correlatividades.get(compartidos.get(estado))).add(estado);
+				
+				primerCambio = false;
+				toAddAuxList.add(toAddAux);
+				toAddAux = new ArrayList<Set<String>>();
+				aux = new HashMap<Integer, Integer>();
+				incremental = 0;
 			}
 			
-			sets.addAll(toAdd);
-			//CHEQUEAR QUE FUNCIONE LA ACTUALIZACION DEL MAPA DE PERTENENCIA!
-			for(String obj : setAux){
-				if(aux.containsKey(map.get(obj))){
-					map.put(obj, map.get(obj) + aux.get(map.get(obj)) + 1);
+			for(List<Set<String>> toAdds : toAddAuxList){
+				Map<String, Integer> compartidos = new HashMap<String, Integer>();
+
+				int contador = 0;
+				int cantAgregadas = 0;
+
+				for(String estado : estadosTotales){
+					for(Set<String> setToCheck : toAdds){
+						if(setToCheck.contains(estado)){
+							if(!compartidos.containsKey(estado)){
+								compartidos.put(estado, contador + cantAgregadas*(toAdds.size()));
+								map.put(estado, contador + cantAgregadas*(toAdds.size()));
+								cantAgregadas++;
+							}else{
+								compartidos.put(estado, compartidos.get(estado) + contador + cantAgregadas*(toAdds.size()));
+								map.put(estado, contador + cantAgregadas*(toAdds.size()));
+								cantAgregadas++;	
+							}
+						}
+						contador++;
+					}
+					contador = 0;
+					cantAgregadas = 0;
 				}
+				List<Set<String>> toAdd = new ArrayList<Set<String>>();
+				Map<Integer, Integer> correlatividades = new HashMap<Integer, Integer>();
+				int inc = 0;
+				for(String estado : compartidos.keySet()){
+					if(!correlatividades.containsKey(compartidos.get(estado))){
+						correlatividades.put(compartidos.get(estado), inc++);
+					}
+				}
+				for(int i = 0; i < inc; i++){
+					toAdd.add(i, new HashSet<String>());
+				}
+				for(String estado : compartidos.keySet()){
+					toAdd.get(correlatividades.get(compartidos.get(estado))).add(estado);
+				}
+				
+				sets.addAll(toAdd);
 			}
-		}
-		for(Set<String> set : sets){
-			System.out.print("[ ");
-			for(String str : set){
-				System.out.print(str + " ");
+
+
+			
+			for(Set<String> set : sets){
+				System.out.print("[ ");
+				for(String str : set){
+					System.out.print(str + " ");
+				}
+				System.out.println("]");
 			}
-			System.out.println("]");
+
 		}
 
-		
 		
 		
 //		do{
