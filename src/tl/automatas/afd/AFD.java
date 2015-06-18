@@ -537,6 +537,8 @@ public class AFD {
 		
 		Boolean huboCambios = true;
 		
+		List<List<Set<String>>> oldAdded = new LinkedList<List<Set<String>>>();
+		
 		while(huboCambios){
 			
 			List<Set<String>> setsAux = new ArrayList<Set<String>>(sets);
@@ -593,6 +595,11 @@ public class AFD {
 				incremental = 0;
 			}
 			
+			// ESTO NO VA A FUNCIONAR PORQUE LAS LISTAS NUNCA VAN A SER LAS MISMAS. HAY QUE COMPARAR EL CONTENIDO DE LAS LISTAS
+//			if(toAddAuxList.equals(oldAdded)){
+//				break;
+//			}
+//			oldAdded = new LinkedList<List<Set<String>>>(toAddAuxList);
 			for(List<Set<String>> toAdds : toAddAuxList){
 				Map<String, Integer> compartidos = new HashMap<String, Integer>();
 
