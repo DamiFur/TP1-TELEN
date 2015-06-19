@@ -566,11 +566,11 @@ public class AFD {
 								}
 							} else {
 								aux.put(map.get(trans.get(obj + "leng:" + leng)), incremental++);
-								if(primerCambio){
-									huboCambios = true;
-								} else {
-									primerCambio = true;
-								}
+//								if(primerCambio){
+//									huboCambios = true;
+//								} else {
+//									primerCambio = true;
+//								} LO QUE HABRIA QUE TESTEAR ES QUE CUANDO SALGA DEL CICLO, el toAddAux TENGA MAS DE UN ELEMENTO DISTINTO
 								toAddAux.add(aux.get(map.get(trans.get(obj + "leng:" + leng))), new HashSet<String>());
 								toAddAux.get(aux.get(map.get(trans.get(obj + "leng:" + leng)))).add(obj);
 								if(sets.contains(set) && sets.get(sets.indexOf(set)).contains(obj)){
@@ -587,8 +587,13 @@ public class AFD {
 						}
 					}
 				}
-				
-				primerCambio = false;
+				for(Set<String> s1 : toAddAux){
+					for(Set<String> s2 : toAddAux){
+						if(!s1.equals(s2)){
+							huboCambios = true;
+						}
+					}
+				}
 				toAddAuxList.add(toAddAux);
 				toAddAux = new ArrayList<Set<String>>();
 				aux = new HashMap<Integer, Integer>();
@@ -653,23 +658,58 @@ public class AFD {
 			}
 
 		}
+		
+		int statesInc = 0;
+		int finalInc = 0;
+		Map<String, String> newStatesMap = new HashMap<String, String>();
+		String[] newStates = new String[sets.size()];
+		Set<String> estadosFinalesSet = new HashSet<String>(Arrays.asList(estadosFinales));
+		String[] newFinales = new String[estadosFinalesSet.size()];
+		Boolean esFinal = false;
+		for(Set<String> set : sets){
+			String estado = "q" + statesInc;
+			for(String s : set){
+				newStatesMap.put(s, estado);
+				if(estadosFinalesSet.contains(s)){
+					esFinal = true;
+				}
+			}
+			newStates[statesInc++] = estado;
+			if(esFinal){
+				newFinales[finalInc++] = estado;
+				esFinal = false;
+			}
+		}
+		Map<String, String> newTransitionsMap = new HashMap<String, String>();
+		List<String[]> newTransitions = new LinkedList<String[]>();
+		for(String[] t : transiciones){
+			if(!newTransitionsMap.containsKey(newStatesMap.get(t[0]) + "leng:" + t[1])){
+				String[] t2 = new String[3];
+				t2[0] = newStatesMap.get(t[0]);
+				t2[1] = t[1];
+				t2[2] = newStatesMap.get(t[2]);
+				newTransitions.add(t2);
+				newTransitionsMap.put(t2[0] + "leng:" + t2[1], t2[2]);
+			}
+		}
+		
+		System.out.println("Estados totales:");
+		for(int i = 0; i < newStates.length; i++){
+			System.out.print(newStates[i] + " ");
+		}
+		System.out.println("Estados Finales");
+		for(int j = 0; j < newFinales.length; j++){
+			System.out.print(newFinales[j] + " ");
+		}
+		System.out.println("Transiciones");
+		for(String[] transicion : newTransitions){
+			for(int k = 0; k < 3; k++){
+				System.out.print(transicion[k] + " ");
+			}
+			System.out.println();
+		}
 
 		
-		
-//		do{
-//			for(List<String> listas : trans.values()){
-//				for(String transicion : listas){
-////					aux.add(transicion[2])
-//					if(!(map.get(transicion[0]).equals(map.get(transicion[2])))){
-//						map.put(transicion[0], cantSets + map.get(transicion[2]));
-//						newSets++;
-//						huboCambios = true;
-//					}
-//				}
-//				cantSets = cantSets + newSets;
-//				newSets = 0;
-//			}			
-//		} while(huboCambios);
 
 
 		
