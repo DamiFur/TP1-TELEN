@@ -23,7 +23,7 @@ public class Tools {
 			scanner.close();
 
 		} catch (FileNotFoundException e) {
-			System.out.println("eh amigo no te encontro el archivo");
+			System.out.println("no te encontro el archivo");
 		}
 		
 		return lineas;
@@ -54,10 +54,66 @@ public class Tools {
 			scanner.close();
 
 		} catch (FileNotFoundException e) {
-			System.out.println("eh amigo no te encontro el archivo");
+			System.out.println("no te encontro el archivo");
 		}
 		
 		return lineas;
+		
+	}
+	
+	public void escribirArchivo(String nombreArchivo, Automata automata){
+
+		try{
+			File archivo = new File(nombreArchivo);
+			if(!archivo.exists()){
+				archivo.createNewFile();
+			}
+			
+			FileWriter fw = new FileWriter(archivo.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			
+			int i;
+			for(i = 0; i < automata.getEstadosTotales().length - 1; i++){
+				bw.write(automata.getEstadosTotales()[i] + "\t");
+			}
+			bw.write(automata.getEstadosTotales()[i] + "\n");
+			
+			int j;
+			for(j = 0; j < automata.getLenguaje().length - 1; j++){
+				bw.write(automata.getLenguaje()[j] + "\t");
+			}
+			bw.write(automata.getLenguaje()[j] + "\n");
+			
+			int k;
+			for(k = 0; k < automata.getEstadosIniciales().length - 1; k++){
+				bw.write(automata.getEstadosIniciales()[k] + "\t");
+			}
+			bw.write(automata.getEstadosIniciales()[k] + "\n");
+			
+			int l;
+			for(l = 0; l < automata.getEstadosFinales().length - 1; l++){
+				bw.write(automata.getEstadosFinales()[l] + "\t");
+			}
+			bw.write(automata.getEstadosFinales()[l] + "\n");
+			
+			int m;
+			String[] aux = new String[3];
+			for(m = 0; m < automata.getTransiciones().size() - 1; m++){
+				aux = automata.getTransiciones().get(m);
+				bw.write(aux[0] + "\t");
+				bw.write(aux[1] + "\t");
+				bw.write(aux[2] + "\n");
+			}
+			aux = automata.getTransiciones().get(m);
+			bw.write(aux[0] + "\t");
+			bw.write(aux[1] + "\t");
+			bw.write(aux[2]);
+			
+			bw.close();
+			
+		} catch(Exception e) {
+			System.out.println("escribiste mal el archivo");
+		}
 		
 	}
 }

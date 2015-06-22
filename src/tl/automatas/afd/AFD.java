@@ -173,7 +173,10 @@ public class AFD {
 		Automata AFD = derivar(automataUniversal);
 		AFD.printAutomata();
 		
-		minimizar(AFD);
+		AFD = minimizar(AFD);
+		AFD.printAutomata();
+		
+		tools.escribirArchivo(aut, AFD);
 
 		
 		//System.err.println("Método no implementado: GenerateDFAFromRegex");
@@ -502,6 +505,7 @@ public class AFD {
 	
 	private static Automata minimizar(Automata aut){
 		
+		String[] estadosIniciales = aut.getEstadosIniciales();
 		String[] estadosTotales = aut.getEstadosTotales();
 		List<String[]> transiciones = aut.getTransiciones();
 		String[] estadosFinales = aut.getEstadosFinales();
@@ -532,12 +536,8 @@ public class AFD {
 			trans.put(transicion[0] + "leng:" + transicion[1], transicion[2]);
 		}
 
-				
-		Boolean primerCambio;
 		
 		Boolean huboCambios = true;
-		
-		List<List<Set<String>>> oldAdded = new LinkedList<List<Set<String>>>();
 		
 		while(huboCambios){
 			
@@ -555,7 +555,6 @@ public class AFD {
 			
 			for(Set<String> set : setsAux){
 				Set<String> setAux = new HashSet<String>(set);
-				primerCambio = false;
 				for(String leng : lenguaje){
 					for(String obj : setAux){
 						if(trans.containsKey(obj + "leng:" + leng)){
@@ -581,7 +580,7 @@ public class AFD {
 					}
 
 					if(set.size() == 0){
-						//PROBAR COMENTAR TODO ESTE IF
+						//PROBAR COMENTAR ESTE IF
 						if(sets.contains(set)){
 							sets.remove(sets.indexOf(set));	
 						}
@@ -661,11 +660,15 @@ public class AFD {
 		
 		int statesInc = 0;
 		int finalInc = 0;
+		int inicialInc = 0;
 		Map<String, String> newStatesMap = new HashMap<String, String>();
 		String[] newStates = new String[sets.size()];
 		Set<String> estadosFinalesSet = new HashSet<String>(Arrays.asList(estadosFinales));
+		Set<String> estadosInicialesSet = new HashSet<String>(Arrays.asList(estadosIniciales));
 		String[] newFinales = new String[estadosFinalesSet.size()];
+		String[] newIniciales = new String[estadosInicialesSet.size()];
 		Boolean esFinal = false;
+		Boolean esInicial = false;
 		for(Set<String> set : sets){
 			String estado = "q" + statesInc;
 			for(String s : set){
@@ -673,11 +676,18 @@ public class AFD {
 				if(estadosFinalesSet.contains(s)){
 					esFinal = true;
 				}
+				if(estadosInicialesSet.contains(s)){
+					esInicial = true;
+				}
 			}
 			newStates[statesInc++] = estado;
 			if(esFinal){
 				newFinales[finalInc++] = estado;
 				esFinal = false;
+			}
+			if(esInicial){
+				newIniciales[inicialInc++] = estado;
+				esInicial = false;
 			}
 		}
 		Map<String, String> newTransitionsMap = new HashMap<String, String>();
@@ -693,21 +703,32 @@ public class AFD {
 			}
 		}
 		
-		System.out.println("Estados totales:");
-		for(int i = 0; i < newStates.length; i++){
-			System.out.print(newStates[i] + " ");
-		}
-		System.out.println("Estados Finales");
-		for(int j = 0; j < newFinales.length; j++){
-			System.out.print(newFinales[j] + " ");
-		}
-		System.out.println("Transiciones");
-		for(String[] transicion : newTransitions){
-			for(int k = 0; k < 3; k++){
-				System.out.print(transicion[k] + " ");
-			}
-			System.out.println();
-		}
+		Automata res = new Automata(newStates, lenguaje, newIniciales, newFinales, newTransitions);
+		
+		return res;
+		
+//		System.out.println("Estados totales:");
+//		for(int i = 0; i < newStates.length; i++){
+//			System.out.print(newStates[i] + " ");
+//		}
+//		System.out.println();
+//		System.out.println("Estados Finales");
+//		for(int j = 0; j < newFinales.length; j++){
+//			System.out.print(newFinales[j] + " ");
+//		}
+//		System.out.println();
+//		System.out.println("Estados Iniciales");
+//		for(int j = 0; j < newIniciales.length; j++){
+//			System.out.print(newIniciales[j] + " ");
+//		}
+//		System.out.println();
+//		System.out.println("Transiciones");
+//		for(String[] transicion : newTransitions){
+//			for(int k = 0; k < 3; k++){
+//				System.out.print(transicion[k] + " ");
+//			}
+//			System.out.println();
+//		}
 
 		
 
@@ -718,9 +739,7 @@ public class AFD {
 		//Recorrer las transiciones y por cada simbolo del lenguaje chequear en O(1) si alguna separa dos disjoint sets
 		//Si no los separa, el numero representativo de su conjunto pasa a ser el maximo numero utilizado
 		//Si los separa, el numero pasa a ser el maximo MAS el numero del conjunto distinto con el que se separó (el numero se multiplica por dos a lo sumo por cada operacion). Otra opcion es guardar en otro hashmap para cada transición (estado del conjunto que estamos recorriendo) con que otro grupo externo se conectan. Después agarro uno y para todos los que conectan con el mismo lugar los agrego en un nuevo conjunto usando el primero que agarre para poner de representante del conjunto
-		
-		
-		return null;
+
 	}
 	
 
@@ -838,7 +857,7 @@ public class AFD {
 	}
 	
 	//esta función sirve para cuando dos estados tienen más de una transición. Por ejemplo, si desde q1 puedo llegar hasta q2 tanto por a, como por b, 
-	//en el label sobre la flecha debería decir "a,b". Entonces, lo que hace esta función es para dos estados, recorrer todas las transiciones
+	//en el label sobre la flecha deberá decir "a,b". Entonces, lo que hace esta función es para dos estados, recorrer todas las transiciones
 	//y acumular los labels en un string.
 	public static String transicionEntreDosEstados(List<String[]> transiciones, String estado1, String estado2){
 		String labelTransicion = "";
@@ -854,9 +873,46 @@ public class AFD {
 		return labelTransicion;
 	}
 
+
 	// Ejercicio 3.d
 	private static void ComputeDFAIntersection(String aut1, String aut2, String aut){
-		System.err.println("Método no implementado: ComputeDFAIntersection");
+		List<String> a1 = tools.leerArchivo(aut1);
+		List<String> a2 = tools.leerArchivo(aut2);
+		
+		String[] estados1 = a1.get(0).split("\t");
+		String[] lenguaje1 = a1.get(1).split("\t");
+		
+		String estadoActual1 = a1.get(2);
+		
+		String[] estadosFinales1 = a1.get(3).split("\t");
+		
+		List<String[]> transiciones1 = new ArrayList<String[]>();
+		
+		for(int f = 4; f < a1.size(); f++){
+			transiciones1.add(a1.get(f).split("\t"));
+		}
+		
+		
+		
+		String[] estados2 = a2.get(0).split("\t");
+		String[] lenguaje2 = a2.get(1).split("\t");
+		
+		String estadoActual2 = a2.get(2);
+		
+		String[] estadosFinales2 = a2.get(3).split("\t");
+		
+		List<String[]> transiciones2 = new ArrayList<String[]>();
+		
+		for(int f = 4; f < a2.size(); f++){
+			transiciones2.add(a2.get(f).split("\t"));
+		}
+		
+		//Primero generamos todos los estados nuevos del automata
+		
+		//Después reconocemos el estado inicial
+		
+		//
+		
 	}
 
 	// Ejercicio 3.e
