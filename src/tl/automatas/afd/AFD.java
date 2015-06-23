@@ -880,11 +880,11 @@ public class AFD {
 		List<String> a2 = tools.leerArchivo(aut2);
 		
 		String[] estados1 = a1.get(0).split("\t");
-		String[] lenguaje1 = a1.get(1).split("\t");
+		Set<String> lenguaje1 = new HashSet<String>(Arrays.asList(a1.get(1).split("\t")));
 		
 		String estadoActual1 = a1.get(2);
 		
-		String[] estadosFinales1 = a1.get(3).split("\t");
+		Set<String> estadosFinales1 = new HashSet<String>(Arrays.asList(a1.get(3).split("\t")));
 		
 		List<String[]> transiciones1 = new ArrayList<String[]>();
 		
@@ -895,11 +895,11 @@ public class AFD {
 		
 		
 		String[] estados2 = a2.get(0).split("\t");
-		String[] lenguaje2 = a2.get(1).split("\t");
+		Set<String> lenguaje2 = new HashSet<String>(Arrays.asList(a2.get(1).split("\t")));
 		
 		String estadoActual2 = a2.get(2);
 		
-		String[] estadosFinales2 = a2.get(3).split("\t");
+		Set<String> estadosFinales2 = new HashSet<String>(Arrays.asList(a2.get(3).split("\t")));
 		
 		List<String[]> transiciones2 = new ArrayList<String[]>();
 		
@@ -907,11 +907,79 @@ public class AFD {
 			transiciones2.add(a2.get(f).split("\t"));
 		}
 		
+		Map<String[], String> mapa1 = new HashMap<String[], String>();
+		Map<String[], String> mapa2 = new HashMap<String[], String>();
+		
+		for(String[] trans : transiciones1){
+			String[] aux = new String[2];
+			aux[0] = trans[0];
+			aux[1] = trans[1];
+			mapa1.put(aux, trans[2]);
+		}
+		
+		for(String[] trans : transiciones2){
+			String[] aux = new String[2];
+			aux[0] = trans[0];
+			aux[1] = trans[1];
+			mapa2.put(aux, trans[2]);
+		}
+		
+		String inicial = estadoActual1 + estadoActual2;
+		
+		Set<String> newStates = new HashSet<String>();
+		newStates.add(inicial);
+		
+		Set<String> lenguaje = new HashSet<String>();
+		
+		for(String l : lenguaje1){
+			if(lenguaje2.contains(l)){
+				lenguaje.add(l);
+			}
+		}
+		
+		String[] aux1 = new String[2];
+		String[] aux2 = new String[2];
+		aux1[0] = estadoActual1;
+		aux2[0] = estadoActual2;
+		
+		Boolean setIsEmpty = false;
+		List<String[]> porProcesar = new LinkedList<String[]>();
+		String[] aux = new String[2];
+		aux[0] = estadoActual1;
+		aux[1] = estadoActual2;
+		porProcesar.add(0, aux);
+		
+		while(!setIsEmpty){
+			aux = porProcesar.get(0);
+			porProcesar.remove(0);
+			aux1[0] = aux[0];
+			aux2[0] = aux[1];
+			for(String l : lenguaje){
+				aux1[1] = l;
+				aux2[1] = l;
+				if(mapa1.containsKey(aux1) && mapa2.containsKey(aux2)){
+					aux[0] = mapa1.get(aux1);
+					aux[1] = mapa2.get(aux2);
+					porProcesar.add(aux);
+					//Hacer lo de las transiciones
+				}
+			}
+			if(porProcesar.isEmpty()){
+				setIsEmpty = true;
+			}
+		}
+		
 		//Primero generamos todos los estados nuevos del automata
 		
-		//Después reconocemos el estado inicial
+		//Después reconocemos el estado inicial y final
 		
-		//
+		//armamos dos mapas uno para el aut1 y otro para el aut2 mapeando con los estados del nuevo automata?
+		
+		//ordenar las transiciones según orden del lenguaje
+		
+		//mapeamos las transiciones
+
+		
 		
 	}
 
