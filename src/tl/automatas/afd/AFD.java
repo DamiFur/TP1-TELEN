@@ -907,21 +907,15 @@ public class AFD {
 			transiciones2.add(a2.get(f).split("\t"));
 		}
 		
-		Map<String[], String> mapa1 = new HashMap<String[], String>();
-		Map<String[], String> mapa2 = new HashMap<String[], String>();
+		Map<String, String> mapa1 = new HashMap<String, String>();
+		Map<String, String> mapa2 = new HashMap<String, String>();
 		
 		for(String[] trans : transiciones1){
-			String[] aux = new String[2];
-			aux[0] = trans[0];
-			aux[1] = trans[1];
-			mapa1.put(aux, trans[2]);
+			mapa1.put(trans[0] + "_" + trans[1], trans[2]);
 		}
 		
-		for(String[] trans : transiciones2){
-			String[] aux = new String[2];
-			aux[0] = trans[0];
-			aux[1] = trans[1];
-			mapa2.put(aux, trans[2]);
+		for(String[] trans : transiciones2){;
+			mapa2.put(trans[0] + "_" + trans[1], trans[2]);
 		}
 		
 		String inicial = estadoActual1 + estadoActual2;
@@ -936,6 +930,9 @@ public class AFD {
 				lenguaje.add(l);
 			}
 		}
+		
+		List<String[]> newTransiciones = new LinkedList<String[]>();
+		Set<String> finales = new HashSet<String>();
 		
 		String[] aux1 = new String[2];
 		String[] aux2 = new String[2];
@@ -957,10 +954,21 @@ public class AFD {
 			for(String l : lenguaje){
 				aux1[1] = l;
 				aux2[1] = l;
-				if(mapa1.containsKey(aux1) && mapa2.containsKey(aux2)){
-					aux[0] = mapa1.get(aux1);
-					aux[1] = mapa2.get(aux2);
-					porProcesar.add(aux);
+				if(mapa1.containsKey(aux1[0] + "_" + aux1[1]) && mapa2.containsKey(aux2[0] + "_" + aux2[1])){
+					//FIJATE QUE SI EL AUTOMATA TIENE UN CICLO SE CAGA todo!
+					aux[0] = mapa1.get(aux1[0] + "_" + aux1[1]);
+					aux[1] = mapa2.get(aux2[0] + "_" + aux2[1]);
+					if(estadosFinales1.contains(aux[0]) && estadosFinales2.contains(aux[1])){
+						//Cambiar todos los nombres de los estados para meterles guion bajo en el medio
+						finales.add(aux[0] + aux[1]);
+					}
+					porProcesar.add(0, aux);
+					newStates.add(aux[0] + aux[1]);
+					String[] transAux = new String[3];
+					transAux[0] = aux1[0] + aux2[0];
+					transAux[1] = l;
+					transAux[2] = aux[0] + aux[1];
+					newTransiciones.add(transAux);
 					//Hacer lo de las transiciones
 				}
 			}
@@ -969,15 +977,36 @@ public class AFD {
 			}
 		}
 		
-		//Primero generamos todos los estados nuevos del automata
+		//Mapearlos a nuevos valores de q
+		String[] totales = new String[newStates.size()];
+		newStates.toArray(totales);
 		
-		//Después reconocemos el estado inicial y final
+		String[] leng = new String[lenguaje.size()];
+		lenguaje.toArray(leng);
 		
-		//armamos dos mapas uno para el aut1 y otro para el aut2 mapeando con los estados del nuevo automata?
+		String[] init = new String[1];
+		init[0] = inicial;
 		
-		//ordenar las transiciones según orden del lenguaje
+		String[] fin = new String[finales.size()];
+		finales.toArray(fin);
 		
-		//mapeamos las transiciones
+		
+		//Terminar esto!
+		Automata res = new Automata(totales, leng, init, fin, newTransiciones);
+		
+		tools.escribirArchivo(aut, res);
+		
+		System.out.println("Transiciones:");
+		for(String[] t : newTransiciones){
+			System.out.println(t[0] + "-" + t[1] + "-" + t[2]);
+		}
+		
+		System.out.println("Estados:");
+		System.out.print("[ ");
+		for(String s : newStates){
+			System.out.print(s + " ");
+		}
+		System.out.print("]");
 
 		
 		
