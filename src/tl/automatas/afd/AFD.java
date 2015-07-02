@@ -428,6 +428,37 @@ public class AFD {
 						
 						hayCambios = true;
 						break;
+					
+					case "OPT":
+						
+						//			{OPT} regex
+						// E1 ------------------------> E2
+						
+						//Para cada transicion que vaya del estado E2 a otro estado E' agregamos una transicion que vaya de E1 a B'
+						
+						for(String[] t : transicionesCpy){
+							if(t[0] == trans[2]){
+								String[] aux = new String[3];
+								aux[0] = trans[0];
+								aux[1] = t[1];
+								aux[2] = t[2];
+								transiciones.add(aux);
+							}
+						}
+						
+						//Si E2 es estado final, E1 también es estado final
+						if(estadosFinales.contains(trans[2])){
+							estadosFinales.add(trans[0]);
+						}
+						
+						//Dividir El Lenguaje
+						List<String> lenguajeParseadoOpt = divideLanguage(lenguaje).get(0);
+												
+						//Cambio la transicion {OPT} regex para que sea solamente regex
+						
+						String LPrimaOpt = join(lenguajeParseadoOpt, "\n");
+						
+						trans[1] = LPrimaOpt;
 						
 				}
 
@@ -647,14 +678,14 @@ public class AFD {
 			}
 
 
-			
-			for(Set<String> set : sets){
-				System.out.print("[ ");
-				for(String str : set){
-					System.out.print(str + " ");
-				}
-				System.out.println("]");
-			}
+//			
+//			for(Set<String> set : sets){
+//				System.out.print("[ ");
+//				for(String str : set){
+//					System.out.print(str + " ");
+//				}
+//				System.out.println("]");
+//			}
 
 		}
 		
@@ -740,6 +771,54 @@ public class AFD {
 		//Si no los separa, el numero representativo de su conjunto pasa a ser el maximo numero utilizado
 		//Si los separa, el numero pasa a ser el maximo MAS el numero del conjunto distinto con el que se separó (el numero se multiplica por dos a lo sumo por cada operacion). Otra opcion es guardar en otro hashmap para cada transición (estado del conjunto que estamos recorriendo) con que otro grupo externo se conectan. Después agarro uno y para todos los que conectan con el mismo lugar los agrego en un nuevo conjunto usando el primero que agarre para poner de representante del conjunto
 
+	}
+	
+	private static Automata determinizar(Automata aut){
+		
+		String[] lenguaje = aut.getLenguaje();
+		
+		String inicial = aut.getEstadosIniciales()[0];
+		
+		Set<String> listaInicial = new HashSet<String>();
+		
+		listaInicial.add(inicial);
+		
+		List<Set<String>> porRecorrer = new LinkedList<Set<String>>();
+		
+		porRecorrer.add(0, listaInicial);
+		
+		Set<String> yaRecorrido = new HashSet<String>();
+		
+		List<String[]> transiciones = aut.getTransiciones();
+		
+		Map<String, List<String>> mapa = new HashMap<String, List<String>>();
+		
+		for(String[] t : transiciones){
+			mapa.put(t[0] + "_" + t[1], new ArrayList<String>());
+		}
+		
+		for(String[] t : transiciones){
+			mapa.get(t[0] + "_" + t[1]).add(t[2]);
+		}
+		
+		Set<String> aux;
+		
+		while(!porRecorrer.isEmpty()){
+			aux = porRecorrer.get(0);
+			porRecorrer.remove(0);
+			yaRecorrido.add(aux.toString());
+			
+			for(String l : lenguaje){
+				for(String estado : aux){
+					Set<String> setAux = new HashSet<String>();
+					
+				}
+			}
+		}
+		
+		
+		
+		return null;
 	}
 	
 
@@ -879,7 +958,7 @@ public class AFD {
 		List<String> a1 = tools.leerArchivo(aut1);
 		List<String> a2 = tools.leerArchivo(aut2);
 		
-		String[] estados1 = a1.get(0).split("\t");
+//		String[] estados1 = a1.get(0).split("\t");
 		Set<String> lenguaje1 = new HashSet<String>(Arrays.asList(a1.get(1).split("\t")));
 		
 		String estadoActual1 = a1.get(2);
@@ -894,7 +973,7 @@ public class AFD {
 		
 		
 		
-		String[] estados2 = a2.get(0).split("\t");
+//		String[] estados2 = a2.get(0).split("\t");
 		Set<String> lenguaje2 = new HashSet<String>(Arrays.asList(a2.get(1).split("\t")));
 		
 		String estadoActual2 = a2.get(2);
@@ -945,9 +1024,11 @@ public class AFD {
 		aux[0] = estadoActual1;
 		aux[1] = estadoActual2;
 		porProcesar.add(0, aux);
+		Set<String> yaProcesados = new HashSet<String>();
 		
 		while(!setIsEmpty){
 			aux = porProcesar.get(0);
+			yaProcesados.add(aux[0] + "_" + aux[1]);
 			porProcesar.remove(0);
 			aux1[0] = aux[0];
 			aux2[0] = aux[1];
@@ -962,7 +1043,9 @@ public class AFD {
 						//Cambiar todos los nombres de los estados para meterles guion bajo en el medio
 						finales.add(aux[0] + aux[1]);
 					}
-					porProcesar.add(0, aux);
+					if(!yaProcesados.contains(aux[0] + "_" + aux[1])){
+						porProcesar.add(0, aux);						
+					}
 					newStates.add(aux[0] + aux[1]);
 					String[] transAux = new String[3];
 					transAux[0] = aux1[0] + aux2[0];
@@ -1034,7 +1117,141 @@ public class AFD {
 
 	// Ejercicio 3.f
 	private static void ComputeDFAEquivalence(String aut1, String aut2)	{
-		System.err.println("Método no implementado: ComputeDFAEquivalence");
+		
+		List<String> automata1 = tools.leerArchivo(aut1);
+		
+		String[] totales1 = automata1.get(0).split("\t");
+		
+		String[] lenguaje1 = automata1.get(1).split("\t");
+		
+		String[] inicial1 = automata1.get(2).split("\t");
+		
+		String[] finales1 = automata1.get(3).split("\t");
+		
+		List<String[]> transiciones1 = new LinkedList<String[]>();
+		
+		for(int i = 4; i < automata1.size(); i++){
+			String[] aux = automata1.get(i).split("\t");
+			transiciones1.add(aux);
+		}
+		
+		List<String> automata2 = tools.leerArchivo(aut2);
+		
+		String[] totales2 = automata2.get(0).split("\t");
+		
+		String[] lenguaje2 = automata2.get(1).split("\t");
+		
+		String[] inicial2 = automata2.get(2).split("\t");
+		
+		String[] finales2 = automata2.get(3).split("\t");
+		
+		List<String[]> transiciones2 = new LinkedList<String[]>();
+		
+		for(int i = 4; i < automata2.size(); i++){
+			String[] aux = automata2.get(i).split("\t");
+			transiciones2.add(aux);
+		}
+		
+		if(lenguaje1.length != lenguaje2.length){
+			System.out.println("FALSE");
+			return;
+		}
+		
+		Set<String> lengComparator = new HashSet<String>();
+		
+		for(int i = 0; i < lenguaje1.length; i++){
+			lengComparator.add(lenguaje1[i]);
+		}
+		
+		for(int i = 0; i < lenguaje2.length; i++){
+			if(!lengComparator.contains(lenguaje2[i])){
+				System.out.println("FALSE");
+				return;
+			}
+		}
+		
+		Automata a1 = new Automata(totales1, lenguaje1, inicial1, finales1, transiciones1);
+		Automata a2 = new Automata(totales2, lenguaje2, inicial2, finales2, transiciones2);
+		
+		a1 = minimizar(a1);
+		
+		totales1 = a1.getEstadosTotales();
+		
+		lenguaje1 = a1.getLenguaje();
+		
+		inicial1 = a1.getEstadosIniciales();
+		
+		finales1 = a1.getEstadosFinales();
+		
+		transiciones1 = a1.getTransiciones();
+		
+		a2 = minimizar(a2);
+		
+		totales2 = a2.getEstadosTotales();
+		
+		lenguaje2 = a2.getLenguaje();
+		
+		inicial2 = a2.getEstadosIniciales();
+		
+		finales2 = a2.getEstadosFinales();
+		
+		transiciones2 = a2.getTransiciones();
+		
+		if(finales1.length != finales2.length){
+			System.out.println("FALSE");
+			return;
+		}
+
+		Map<String, String> a1Toa2 = new HashMap<String, String>();
+		Set<String> yaProcesado = new HashSet<String>();
+		List<String> porProcesar = new LinkedList<String>();
+		Map<String, String> trans1 = new HashMap<String, String>();
+		for(String[] t : transiciones1){
+			trans1.put(t[0] + "_" + t[1], t[2]);
+		}
+		Map<String, String> trans2 = new HashMap<String, String>();
+		for(String[] t : transiciones2){
+			trans2.put(t[0] + "_" + t[1], t[2]);
+		}
+		
+		a1Toa2.put(a1.getEstadosIniciales()[0], a2.getEstadosIniciales()[0]);
+		
+		porProcesar.add(0, a1.getEstadosIniciales()[0]);
+		
+		String actual;
+		while(!porProcesar.isEmpty()){
+			actual = porProcesar.get(0);
+			porProcesar.remove(0);
+			yaProcesado.add(actual);
+			
+			for(String l : lenguaje1){
+				if(trans1.containsKey(actual + "_" + l) != trans2.containsKey(a1Toa2.get(actual) + "_" + l)){
+					System.out.println("FALSE");
+					return;
+				} else {
+					if(trans1.containsKey(actual + "_" + l)){
+						a1Toa2.put(trans1.get(actual + "_" + l), trans2.get(a1Toa2.get(actual) + "_" + l));
+					}
+					if(!yaProcesado.contains(trans1.get(actual + "_" + l))){
+						porProcesar.add(0, trans1.get(actual + "_" + l));
+					}
+				}
+			}
+		}
+		
+		Set<String> resFinales = new HashSet<String>();
+		for(String f : finales2){
+			resFinales.add(f);
+		}
+		for(String f1: finales1){
+			if(!resFinales.contains(a1Toa2.get(f1))){
+				System.out.println("FALSE");
+				return;
+			}
+		}
+		
+		System.out.println("TRUE");
+
 	}
 	
 //	private static List<Lenguaje> derivar(List<String> lenguaje){
@@ -1192,43 +1409,43 @@ public class AFD {
 	
 	
 	// ******************************* Minimizar autómata ********************************************************
-	public static void MinimizarAutomata(String aut, String autMin)
-	{
-		List<String> automata = tools.leerArchivo(aut);	
-		String[] estados = automata.get(0).split("\t");
-		ArrayList<String> estadosNoFinales = new ArrayList<String>();
-		String[] estadosFinales = automata.get(3).split("\t");
-		List<String[]> transiciones = new ArrayList<String[]>();
-		for(int f = 4; f < automata.size(); f++){
-			transiciones.add(automata.get(f).split("\t"));
-		}
-		
-		List<Grupo> grupos = new ArrayList<Grupo>();
-		
-		for(String est : estados){
-			if(!Arrays.asList(estadosFinales).contains(est)){
-				estadosNoFinales.add(est);
-			}
-		}
-		
-		grupos.add(new Grupo(estadosNoFinales,1));
-		grupos.add(new Grupo(Arrays.asList(estadosFinales),2));
-		
-		int numeroGrupo=2;
-		
-		for(Grupo grupo : grupos){
-			List<String[]> gruposPorEstado = new ArrayList<String[]>();
-			for(String estado : grupo.estados()){
-				for(String[] trans : transiciones){
-					if(trans[0].equals(estado)){
-						if(GrupoDeEstado(grupos,trans[2]) != grupo.numero()){
-							
-						}
-					}
-				}
-			}
-		}
-	}
+//	public static void MinimizarAutomata(String aut, String autMin)
+//	{
+//		List<String> automata = tools.leerArchivo(aut);	
+//		String[] estados = automata.get(0).split("\t");
+//		ArrayList<String> estadosNoFinales = new ArrayList<String>();
+//		String[] estadosFinales = automata.get(3).split("\t");
+//		List<String[]> transiciones = new ArrayList<String[]>();
+//		for(int f = 4; f < automata.size(); f++){
+//			transiciones.add(automata.get(f).split("\t"));
+//		}
+//		
+//		List<Grupo> grupos = new ArrayList<Grupo>();
+//		
+//		for(String est : estados){
+//			if(!Arrays.asList(estadosFinales).contains(est)){
+//				estadosNoFinales.add(est);
+//			}
+//		}
+//		
+//		grupos.add(new Grupo(estadosNoFinales,1));
+//		grupos.add(new Grupo(Arrays.asList(estadosFinales),2));
+//		
+//		int numeroGrupo=2;
+//		
+//		for(Grupo grupo : grupos){
+//			List<String[]> gruposPorEstado = new ArrayList<String[]>();
+//			for(String estado : grupo.estados()){
+//				for(String[] trans : transiciones){
+//					if(trans[0].equals(estado)){
+//						if(GrupoDeEstado(grupos,trans[2]) != grupo.numero()){
+//							
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
 	
 	static public int GrupoDeEstado(List<Grupo> grupos, String estado){
 		for(Grupo grupo : grupos){
