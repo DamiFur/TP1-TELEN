@@ -1,0 +1,14 @@
+{CONCAT}2
+	{STAR}
+		{OR}2
+			{CONCAT}3
+				b
+				b
+				a
+			b
+	{STAR}
+		{OR}2
+			a
+			{CONCAT}2
+				b
+				b

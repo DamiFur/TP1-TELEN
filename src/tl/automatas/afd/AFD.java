@@ -173,8 +173,13 @@ public class AFD {
 		Automata AFD = derivar(automataUniversal);
 		AFD.printAutomata();
 		
+		
+		AFD = determinizar(AFD);
+		AFD.printAutomata();
+		
 		AFD = minimizar(AFD);
 		AFD.printAutomata();
+
 		
 		tools.escribirArchivo(aut, AFD);
 
@@ -350,10 +355,13 @@ public class AFD {
 						//Dividir El Lenguaje
 						List<String> lenguajeParseadoStar = divideLanguage(lenguaje).get(0);
 						
-						//Cambio las transiciones que salian del nodo destino ahora salen del fuente
-						for(String[] t : transiciones){
+						//Para cada transición que sale del nodo destino agrego una que sale del nodo fuente
+						for(String[] t : transicionesCpy){
 							if(t[0].equals(trans[2])){
-								t[0] = trans[0];
+								String[] aux = new String[3];
+								aux[0] = trans[0];
+								aux[1] = t[1];
+								aux[2] = t[2];
 							}
 						}
 						
@@ -363,19 +371,19 @@ public class AFD {
 							estadosFinales.remove(estadosFinales.indexOf(trans[2]));
 						}
 						
-						//Eliminamos el estado destino
-						estadosTotalesList.remove(estadosTotalesList.indexOf(trans[2]));
+//						//Eliminamos el estado destino
+//						estadosTotalesList.remove(estadosTotalesList.indexOf(trans[2]));
 						
-						//Convierto la transicion que estoy recorriendo en una tansicion sin la estrella de destino a sí mismo
+						//Agrego una transición de lo que antes tenía estrella sin la estrella, del nodo destino a sí mismo
 						String LPrima = join(lenguajeParseadoStar, "\n");
 						String[] nuevaTransicion = new String[3];
-						nuevaTransicion[0] = trans[0];
+						nuevaTransicion[0] = trans[2];
 						nuevaTransicion[1] = LPrima;
-						nuevaTransicion[2] = trans[0];
+						nuevaTransicion[2] = trans[2];
 						transiciones.add(nuevaTransicion);
 						
-						//Saco la transacción vieja que ya fue modificada
-						transiciones.remove(transiciones.indexOf(trans));
+						//Le saco la estrella a la transicion original
+						trans[1] = LPrima;
 						
 //						//Agrego todas las transiciones del nodo Destino al nodo Fuente
 //						List<String[]> transicionesAux = new LinkedList<String[]>(transiciones);
@@ -696,7 +704,7 @@ public class AFD {
 		String[] newStates = new String[sets.size()];
 		Set<String> estadosFinalesSet = new HashSet<String>(Arrays.asList(estadosFinales));
 		Set<String> estadosInicialesSet = new HashSet<String>(Arrays.asList(estadosIniciales));
-		String[] newFinales = new String[estadosFinalesSet.size()];
+		List<String> newFinales = new ArrayList<String>();
 		String[] newIniciales = new String[estadosInicialesSet.size()];
 		Boolean esFinal = false;
 		Boolean esInicial = false;
@@ -713,7 +721,7 @@ public class AFD {
 			}
 			newStates[statesInc++] = estado;
 			if(esFinal){
-				newFinales[finalInc++] = estado;
+				newFinales.add(estado);
 				esFinal = false;
 			}
 			if(esInicial){
@@ -734,7 +742,10 @@ public class AFD {
 			}
 		}
 		
-		Automata res = new Automata(newStates, lenguaje, newIniciales, newFinales, newTransitions);
+		String[] newFinalesArray = new String[newFinales.size()]; 
+		newFinales.toArray(newFinalesArray);
+		
+		Automata res = new Automata(newStates, lenguaje, newIniciales, newFinalesArray, newTransitions);
 		
 		return res;
 		
@@ -779,6 +790,8 @@ public class AFD {
 		
 		String inicial = aut.getEstadosIniciales()[0];
 		
+		Set<String> estadosFinales = new HashSet<String>(Arrays.asList(aut.getEstadosFinales()));
+		
 		Set<String> listaInicial = new HashSet<String>();
 		
 		listaInicial.add(inicial);
@@ -787,11 +800,15 @@ public class AFD {
 		
 		porRecorrer.add(0, listaInicial);
 		
-		Set<String> yaRecorrido = new HashSet<String>();
+		Map<String, String> yaRecorrido = new HashMap<String, String>();
 		
 		List<String[]> transiciones = aut.getTransiciones();
 		
 		Map<String, List<String>> mapa = new HashMap<String, List<String>>();
+		
+		List<String[]> newTransiciones = new LinkedList<String[]>();
+		
+		Set<String> newFinales = new HashSet<String>();
 		
 		for(String[] t : transiciones){
 			mapa.put(t[0] + "_" + t[1], new ArrayList<String>());
@@ -803,22 +820,59 @@ public class AFD {
 		
 		Set<String> aux;
 		
+		int incremental = 0;
+		
+		aux = porRecorrer.get(0);
+		yaRecorrido.put(aux.toString(), "q" + incremental++);
+		
 		while(!porRecorrer.isEmpty()){
 			aux = porRecorrer.get(0);
 			porRecorrer.remove(0);
-			yaRecorrido.add(aux.toString());
+
 			
 			for(String l : lenguaje){
+				Set<String> setAux = new HashSet<String>();
 				for(String estado : aux){
-					Set<String> setAux = new HashSet<String>();
+					if(mapa.containsKey(estado + "_" + l)){
+						setAux.addAll(mapa.get(estado + "_" + l));
+					}
+					if(estadosFinales.contains(estado)){
+						newFinales.add(yaRecorrido.get(aux.toString()));
+					}
 					
 				}
+				if(!setAux.isEmpty()){
+					if(!yaRecorrido.containsKey(setAux.toString())){
+						yaRecorrido.put(setAux.toString(), "q" + incremental++);
+						porRecorrer.add(setAux);
+					}
+					String[] transAux = new String[3];
+					transAux[0] = yaRecorrido.get(aux.toString());
+					transAux[1] = l;
+					transAux[2] = yaRecorrido.get(setAux.toString());
+					newTransiciones.add(transAux);
+				}
 			}
+
 		}
 		
+		String[] newTotales = new String[yaRecorrido.values().size()];
+		int i = 0;
+		for(String valor : yaRecorrido.values()){
+			newTotales[i++] = valor;
+		}
+		String[] newInicial = new String[1];
+		newInicial[0] = "q0";
 		
+		String[] newFin = new String[newFinales.size()];
+		i = 0;
+		for(String s : newFinales){
+			newFin[i++] = s;
+		}
 		
-		return null;
+		Automata res = new Automata(newTotales, lenguaje, newInicial, newFin, newTransiciones);
+		
+		return res;
 	}
 	
 
