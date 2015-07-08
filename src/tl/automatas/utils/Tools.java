@@ -78,11 +78,16 @@ public class Tools {
 			}
 			bw.write(automata.getEstadosTotales()[i] + "\n");
 			
-			int j;
-			for(j = 0; j < automata.getLenguaje().length - 1; j++){
-				bw.write(automata.getLenguaje()[j] + "\t");
+			if(automata.getLenguaje().length > 0){
+				int j;
+				for(j = 0; j < automata.getLenguaje().length - 1; j++){
+					bw.write(automata.getLenguaje()[j] + "\t");
+				}
+				bw.write(automata.getLenguaje()[j] + "\n");
+			} else {
+				bw.write("<lenguaje vacío>\n");
 			}
-			bw.write(automata.getLenguaje()[j] + "\n");
+			
 			
 			int k;
 			for(k = 0; k < automata.getEstadosIniciales().length - 1; k++){
@@ -96,18 +101,21 @@ public class Tools {
 			}
 			bw.write(automata.getEstadosFinales()[l] + "\n");
 			
-			int m;
-			String[] aux = new String[3];
-			for(m = 0; m < automata.getTransiciones().size() - 1; m++){
+			if(!automata.getTransiciones().isEmpty()){
+				int m;
+				String[] aux = new String[3];
+				for(m = 0; m < automata.getTransiciones().size() - 1; m++){
+					aux = automata.getTransiciones().get(m);
+					bw.write(aux[0] + "\t");
+					bw.write(aux[1] + "\t");
+					bw.write(aux[2] + "\n");
+				}
 				aux = automata.getTransiciones().get(m);
 				bw.write(aux[0] + "\t");
 				bw.write(aux[1] + "\t");
-				bw.write(aux[2] + "\n");
+				bw.write(aux[2]);
 			}
-			aux = automata.getTransiciones().get(m);
-			bw.write(aux[0] + "\t");
-			bw.write(aux[1] + "\t");
-			bw.write(aux[2]);
+
 			
 			bw.close();
 			
